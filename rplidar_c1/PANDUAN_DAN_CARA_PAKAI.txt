@@ -1,0 +1,163 @@
+================================================================================
+           PANDUAN PENGGUNAAN PROGRAM VISUALISASI SLAMTEC RPLIDAR C1
+================================================================================
+
+Penulis : Antigravity AI Assistant
+Target  : Sensor Slamtec RPLIDAR C1 (360° DTOF Laser Scanner)
+Bahasa  : Python 3
+File    : visualizer.py (Radar OpenCV) & visualizer_matplotlib.py (Polar Plot)
+
+--------------------------------------------------------------------------------
+1. TENTANG SLAMTEC RPLIDAR C1
+--------------------------------------------------------------------------------
+Slamtec RPLIDAR C1 adalah sensor LiDAR 2D 360 derajat berbasis teknologi DTOF
+(Direct Time-of-Flight) dengan jangkauan 0.05 m s/d 12 meter dan frekuensi sampling
+hingga 5.000 Hz.
+
+CATATAN PENTING:
+- Baud rate default untuk RPLIDAR C1 adalah 460800 bps (berbeda dengan tipe A1/A2
+  lama yang menggunakan 115200 bps).
+- Jika baud rate salah, sensor tidak akan mengirimkan data atau motor pemindai
+  tidak akan berputar. Kode ini sudah otomatis dikonfigurasi pada 460800 bps.
+
+
+--------------------------------------------------------------------------------
+2. INSTALASI DEPENDENSI (PREREQUISITES)
+--------------------------------------------------------------------------------
+Program ini membutuhkan Python 3 dan pustaka berikut:
+- pyserial (komunikasi port serial UART/USB)
+- opencv-python (antarmuka grafis radar berkecepatan tinggi)
+- numpy (kalkulasi numerik matriks & koordinat)
+- matplotlib (opsional, jika ingin visualisasi polar ilmiah)
+
+Cara instalasi di Linux / Ubuntu:
+Metode A (Rekomendasi via pip):
+    pip install pyserial opencv-python numpy matplotlib
+
+Atau jika sistem Anda menggunakan PEP 668 (externally-managed):
+    pip install --break-system-packages pyserial opencv-python numpy matplotlib
+
+Metode B (Via manajer paket Debian/Ubuntu):
+    sudo apt update
+    sudo apt install python3-serial python3-opencv python3-numpy python3-matplotlib
+
+
+--------------------------------------------------------------------------------
+3. KONFIGURASI HAK AKSES PORT SERIAL (PENTING DI LINUX)
+--------------------------------------------------------------------------------
+Di sistem Linux (seperti Ubuntu), port serial (/dev/ttyUSB0 atau /dev/ttyACM0)
+secara default hanya dapat diakses oleh user dalam grup 'dialout'.
+
+Jika muncul pesan error "Permission denied: '/dev/ttyUSB0'":
+1. Tambahkan user Anda ke grup dialout:
+      sudo usermod -a -G dialout $USER
+
+2. Atau berikan izin akses langsung ke port:
+      sudo chmod 666 /dev/ttyUSB0
+
+3. Catatan: Setelah menjalankan usermod, lakukan logout dan login kembali agar
+   grup dialout aktif.
+
+
+--------------------------------------------------------------------------------
+4. STRUKTUR FILE KODE
+--------------------------------------------------------------------------------
+Folder: /home/hiraviel/Hiraviel/rplidar_c1/
+├── visualizer.py               -> Program utama: GUI radar interaktif (OpenCV)
+│                                  dengan HUD, pelacak halangan, dan zoom.
+├── visualizer_matplotlib.py    -> Program alternatif: Visualisasi polar Matplotlib
+│                                  cocok untuk pembuatan laporan ilmiah.
+└── PANDUAN_DAN_CARA_PAKAI.txt  -> Berkas panduan ini.
+
+
+--------------------------------------------------------------------------------
+5. CARA MENJALANKAN PROGRAM
+--------------------------------------------------------------------------------
+
+A. Menjalankan Visualizer Radar Utama (OpenCV)
+---------------------------------------------
+1. Pastikan modul USB RPLIDAR C1 sudah tercolok ke komputer.
+2. Buka terminal dan masuk ke direktori program:
+      cd "/home/hiraviel/Hiraviel/rplidar_c1"
+
+3. Jalankan dengan deteksi port otomatis:
+      python3 visualizer.py
+
+4. Atau tentukan port serial secara manual:
+      python3 visualizer.py --port /dev/ttyUSB0
+
+5. Jika belum memiliki sensor fisik yang dicolokkan dan ingin menguji tampilan:
+      python3 visualizer.py --demo
+   (Mode simulasi akan membuat ruangan virtual 4x4m dengan rintangan bergerak).
+
+
+B. Menjalankan Visualizer Matplotlib Polar Plot
+----------------------------------------------
+      cd "/home/hiraviel/Hiraviel/rplidar_c1"
+      python3 visualizer_matplotlib.py
+      # Atau mode simulasi:
+      python3 visualizer_matplotlib.py --demo
+
+
+--------------------------------------------------------------------------------
+6. KONTROL TOMBOL PADA TAMPILAN RADAR (KEYBOARD SHORTCUTS)
+--------------------------------------------------------------------------------
+Saat jendela radar terbuka, Anda dapat mengontrol tampilan dengan tombol berikut:
+
+[ + ] atau [ = ] : ZOOM IN (mempersempit jarak jangkauan radar, misal 2m, 3m)
+[ - ] atau [ _ ] : ZOOM OUT (memperluas jarak jangkauan radar hingga 16 meter)
+[ SPASI ]        : PAUSE / RESUME (membekukan pemindaian untuk inspeksi objek)
+[ S ]            : SCREENSHOT (menyimpan gambar radar saat ini ke file PNG,
+                   contoh: lidar_scan_20261013_193000.png)
+[ Q ] atau [ESC] : KELUAR (menghentikan pemindaian, mematikan motor/laser
+                   dengan aman, lalu menutup aplikasi)
+
+
+--------------------------------------------------------------------------------
+7. FITUR YANG TERSEDIA PADA TAMPILAN RADAR
+--------------------------------------------------------------------------------
+1. Lingkaran Jarak (Distance Rings):
+   Garis konsentris menunjukkan jarak dalam meter (1m, 2m, 3m, dst).
+2. Sumbu Arah & Sudut:
+   - 0°   : Arah depan (Front) sensor
+   - 90°  : Arah kanan (Right) sensor
+   - 180° : Arah belakang (Back) sensor
+   - 270° : Arah kiri (Left) sensor
+3. Pewarnaan Titik (Color Gradient):
+   - Warna Merah/Oranye : Objek berjarak sangat dekat (< 1.5 m)
+   - Warna Kuning/Hijau : Objek berjarak menengah (1.5 m - 4 m)
+   - Warna Cyan/Biru    : Objek berjarak jauh (> 4 m)
+4. Pelacak Halangan Terdekat (Closest Obstacle Tracker):
+   Sistem otomatis mendeteksi objek terdekat, menandainya dengan cincin target
+   merah, dan menampilkan informasi jarak (cm / m) serta sudutnya secara live.
+5. Heads-Up Display (HUD):
+   Menampilkan nama perangkat, port serial, baudrate, FPS visualisasi, serta
+   laju perolehan titik (points/second).
+
+
+--------------------------------------------------------------------------------
+8. TROUBLESHOOTING (PEMECAHAN MASALAH)
+--------------------------------------------------------------------------------
+1. Motor LiDAR tidak berputar saat program dijalankan:
+   - Pastikan kabel USB terpasang kuat. RPLIDAR C1 membutuhkan arus 5V (sekitar
+     1A - 1.5A pada saat startup motor). Jika dicolokkan via USB hub pasif,
+     pindahkan langsung ke port USB motherboard/laptop.
+   - Periksa apakah port benar dengan mengetik di terminal:
+       ls -l /dev/ttyUSB*
+
+2. Muncul error "Permission Denied":
+   - Jalankan: sudo chmod 666 /dev/ttyUSB0
+   - Dan masukkan akun ke grup dialout: sudo usermod -a -G dialout $USER
+
+3. Layar GUI tidak muncul:
+   - Pastikan Anda menjalankan program di lingkungan desktop grafis (bukan SSH
+     tanpa X11 forwarding). Variabel DISPLAY harus aktif.
+
+4. Data titik terlihat berputar terbalik:
+   - Jika Anda memasang sensor secara terbalik (mounting terbalik pada robot),
+     Anda dapat mengubah arah tanda sudut rad di visualizer.py.
+
+================================================================================
+Selamat menggunakan Slamtec RPLIDAR C1!
+================================================================================
+
